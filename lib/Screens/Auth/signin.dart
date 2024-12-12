@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_dam/Providers/authProvider.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_dam/Screens/Auth/ForgetPassword.dart';
 import 'package:flutter_application_dam/Screens/Home.dart';
 
@@ -15,7 +17,6 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
   late Animation<double> _opacityAnimation;
   String email = '';
   String password = '';
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -38,16 +39,15 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      setState(() {
-        _isLoading = true;
-      });
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      bool success = await authProvider.login(email, password);
+
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful')),
         );
@@ -55,12 +55,21 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
           context,
           MaterialPageRoute(builder: (context) => const Home()),
         );
-      });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage ?? 'Login failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -106,13 +115,12 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: const BorderSide(
-                                        color: Colors
-                                            .black), // Always black border
+                                        color: Colors.black),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide:
-                                        const BorderSide(color: Colors.black),
+                                    const BorderSide(color: Colors.black),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -123,7 +131,6 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
                                       color: Colors.redAccent),
                                   filled: true,
                                   fillColor: Colors.grey[200],
-                                  // Subtle background for better readability
                                   contentPadding: const EdgeInsets.symmetric(
                                       vertical: 14, horizontal: 16),
                                 ),
@@ -149,13 +156,12 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: const BorderSide(
-                                        color: Colors
-                                            .black), // Always black border
+                                        color: Colors.black),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide:
-                                        const BorderSide(color: Colors.black),
+                                    const BorderSide(color: Colors.black),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -195,18 +201,18 @@ class _SigninState extends State<Signin> with SingleTickerProviderStateMixin {
                                   elevation: 4,
                                   shadowColor: Colors.black45,
                                 ),
-                                onPressed: _isLoading ? null : _submitForm,
-                                child: _isLoading
+                                onPressed: authProvider.isLoading ? null : _submitForm,
+                                child: authProvider.isLoading
                                     ? const CircularProgressIndicator(
-                                        color: Colors.white)
+                                    color: Colors.white)
                                     : const Text(
-                                        'Login',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                  'Login',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           ),

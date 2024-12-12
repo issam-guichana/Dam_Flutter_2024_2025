@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_dam/Providers/authProvider.dart';
+import 'package:provider/provider.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -9,15 +11,14 @@ class Signup extends StatefulWidget {
 
 class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
-  bool _isLoading = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-  TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -42,25 +43,42 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isLoading = false;
-        });
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      bool success = await authProvider.signup(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        confirmPassword: _confirmPasswordController.text.trim(),
+      );
+
+      if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registration successful')),
         );
-        // Add your code here for what happens after registration
-      });
+        // Navigate to next screen or pop back to login
+        Navigator.of(context).pop();
+      } else {
+        // Error handling is now done in the AuthProvider
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                Provider.of<AuthProvider>(context, listen: false).errorMessage
+                    ?? 'Signup failed'
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -264,10 +282,9 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                                   elevation: 4,
                                   shadowColor: Colors.black45,
                                 ),
-                                onPressed: _isLoading ? null : _submitForm,
-                                child: _isLoading
-                                    ? const CircularProgressIndicator(
-                                    color: Colors.white)
+                                onPressed: authProvider.isLoading ? null : _submitForm,
+                                child: authProvider.isLoading
+                                    ? const CircularProgressIndicator(color: Colors.white)
                                     : const Text(
                                   'Register',
                                   style: TextStyle(

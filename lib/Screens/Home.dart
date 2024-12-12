@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_dam/Screens/User/UsersListPage.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -8,10 +9,10 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Home',
+          'Tableau de Bord Admin',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.pink,
+        backgroundColor: Colors.deepPurple,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
@@ -23,37 +24,37 @@ class Home extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.all(8),
-        children: const <Widget>[
-          const Center(
+        children:const <Widget>[
+           Center(
             child: Padding(
               padding: EdgeInsets.all(10.0),
               child: Text(
-                "Choose the cuisine you want to eat",
+                "Choisissez la section à gérer",
                 style: TextStyle(
-                  color: Colors.red,
+                  color: Colors.deepPurple,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
-          CuisineTile(
-            cuisineName: "Tunisian Cuisine",
-            color: Colors.pink,
-            iconName: Icons.food_bank,
-            imagePath: "assets/tunisia.jpg",
+          AdminTile(
+            sectionName: "Gestion Utilisateur",
+            color: Colors.blue,
+            iconName: Icons.people,
+            destinationPage: GestionUtilisateur(),
           ),
-          CuisineTile(
-            cuisineName: "Italian Cuisine",
+          AdminTile(
+            sectionName: "Gestion Recette",
+            color: Colors.green,
+            iconName: Icons.restaurant_menu,
+           destinationPage: GestionUtilisateur(),
+          ),
+          AdminTile(
+            sectionName: "Gestion Publication",
             color: Colors.orange,
-            iconName: Icons.local_pizza,
-            imagePath: "assets/italienne.jpg",
-          ),
-          CuisineTile(
-            cuisineName: "Japanese Cuisine",
-            color: Colors.red,
-            iconName: Icons.ramen_dining,
-            imagePath: "assets/japonais.jpg",
+            iconName: Icons.publish,
+            destinationPage: GestionUtilisateur(),
           ),
         ],
       ),
@@ -61,24 +62,32 @@ class Home extends StatelessWidget {
   }
 }
 
-class CuisineTile extends StatelessWidget {
-  final String cuisineName;
+class AdminTile extends StatelessWidget {
+  final String sectionName;
   final IconData iconName;
   final Color color;
-  final String imagePath;
+  final Widget destinationPage;
 
-  const CuisineTile({
+  const AdminTile({
     super.key,
-    required this.cuisineName,
+    required this.sectionName,
     required this.iconName,
     required this.color,
-    required this.imagePath,
+    required this.destinationPage,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => print('Navigating to $cuisineName'),
+      onTap: () {
+        // Navigate to the respective page
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => destinationPage
+            )
+        );
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
@@ -99,39 +108,24 @@ class CuisineTile extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(15)),
-              child: Image.asset(
-                imagePath,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Icon(iconName, color: Colors.white, size: 30),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      cuisineName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Icon(iconName, color: Colors.white, size: 30),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  sectionName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
