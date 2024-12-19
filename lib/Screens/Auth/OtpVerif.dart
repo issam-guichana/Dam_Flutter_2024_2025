@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_dam/Providers/OTPProvider.dart';
 import 'package:flutter_application_dam/Screens/Auth/reset_password.dart';
 import 'package:pinput/pinput.dart';
+import 'package:provider/provider.dart';
 
 class OtpVerif extends StatefulWidget {
   const OtpVerif({super.key});
@@ -12,7 +14,6 @@ class OtpVerif extends StatefulWidget {
 class _OtpVerifState extends State<OtpVerif> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacityAnimation;
-  bool _isLoading = false;
   String _otp = '';
 
   @override
@@ -34,25 +35,17 @@ class _OtpVerifState extends State<OtpVerif> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  void _submitOtp() {
-    setState(() {
-      _isLoading = true;
-    });
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
-      // OTP verification logic
-      print('OTP submitted: $_otp');
+  void _submitOtp(BuildContext context) async {
+    final otpProvider = Provider.of<OtpProvider>(context, listen: false);
+    await otpProvider.verifyOtp(_otp);
 
-      // Navigate to the reset password page
-      Navigator.push(
+    if (otpProvider.isVerified) {
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const ResetPassword()),
       );
-    });
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +53,10 @@ class _OtpVerifState extends State<OtpVerif> with SingleTickerProviderStateMixin
       width: 56,
       height: 56,
       textStyle: const TextStyle(
-          fontSize: 20, color: Colors.black, fontWeight: FontWeight.w600),
+        fontSize: 20,
+        color: Colors.black,
+        fontWeight: FontWeight.w600,
+      ),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.redAccent),
         borderRadius: BorderRadius.circular(10),
@@ -71,9 +67,7 @@ class _OtpVerifState extends State<OtpVerif> with SingleTickerProviderStateMixin
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Navigates back to the previous screen
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.pinkAccent,
         elevation: 0,
@@ -130,45 +124,67 @@ class _OtpVerifState extends State<OtpVerif> with SingleTickerProviderStateMixin
                               ),
                             ),
                             const SizedBox(height: 20),
+                            Consumer<OtpProvider>(
+                              builder: (context, provider, child) {
+                                if (provider.error != null) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Text(
+                                      provider.error!,
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
                             Pinput(
                               length: 4,
                               pinAnimationType: PinAnimationType.slide,
                               defaultPinTheme: defaultPinTheme,
-                              onCompleted: (pin) {
-                                setState(() {
-                                  _otp = pin;
-                                });
-                              },
+                              onCompleted: (pin) => setState(() => _otp = pin),
                             ),
                             const SizedBox(height: 20),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 14, horizontal: 24),
-                                backgroundColor: Colors.redAccent,
-                                elevation: 4,
-                                shadowColor: Colors.black45,
-                              ),
-                              onPressed: _isLoading ? null : _submitOtp,
-                              child: _isLoading
-                                  ? const CircularProgressIndicator(
-                                  color: Colors.white)
-                                  : const Text(
-                                'Submit',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                            Consumer<OtpProvider>(
+                              builder: (context, provider, child) {
+                                return ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                      horizontal: 24,
+                                    ),
+                                    backgroundColor: Colors.redAccent,
+                                    elevation: 4,
+                                    shadowColor: Colors.black45,
+                                  ),
+                                  onPressed: provider.isLoading
+                                      ? null
+                                      : () => _submitOtp(context),
+                                  child: provider.isLoading
+                                      ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                      : const Text(
+                                    'Submit',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 10),
                             TextButton(
                               onPressed: () {
-                                // Logic to resend OTP
+                                // Resend OTP logic here
                               },
                               child: const Text(
                                 "Didn't receive the OTP? Resend",

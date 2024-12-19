@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_dam/Providers/ResetPasswordProvider.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_application_dam/Screens/Auth/OtpVerif.dart';
 
 class ResetPassword extends StatefulWidget {
@@ -14,7 +16,6 @@ class _ResetPasswordState extends State<ResetPassword> with SingleTickerProvider
   late Animation<double> _opacityAnimation;
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -39,21 +40,25 @@ class _ResetPasswordState extends State<ResetPassword> with SingleTickerProvider
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       if (passwordController.text == confirmPasswordController.text) {
-        setState(() {
-          _isLoading = true;
-        });
-        Future.delayed(const Duration(seconds: 2), () {
-          setState(() {
-            _isLoading = false;
-          });
+        final resetPasswordProvider = Provider.of<ResetPasswordProvider>(context, listen: false);
+        final success = await resetPasswordProvider.resetPassword(passwordController.text);
+
+        if (success && mounted) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const OtpVerif()),
           );
-        });
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(resetPasswordProvider.error ?? 'Failed to reset password'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -71,161 +76,149 @@ class _ResetPasswordState extends State<ResetPassword> with SingleTickerProvider
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Navigates back to the previous screen
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.pinkAccent,
         elevation: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.pinkAccent, Colors.orange],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  SizedBox(
-                    height: 150,
-                    child: FadeTransition(
-                      opacity: _opacityAnimation,
-                      child: Image.asset('assets/gourmetia_logo.png'),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  FadeTransition(
-                    opacity: _opacityAnimation,
-                    child: Card(
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+      body: Consumer<ResetPasswordProvider>(
+        builder: (context, resetPasswordProvider, child) {
+          return Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.pinkAccent, Colors.orange],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      SizedBox(
+                        height: 150,
+                        child: FadeTransition(
+                          opacity: _opacityAnimation,
+                          child: Image.asset('assets/gourmetia_logo.png'),
+                        ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            children: <Widget>[
-                              TextFormField(
-                                controller: passwordController,
-                                decoration: InputDecoration(
-                                  labelText: 'New Password',
-                                  labelStyle: const TextStyle(
-                                      fontSize: 16, color: Colors.grey),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: Colors.black),
+                      const SizedBox(height: 20),
+                      FadeTransition(
+                        opacity: _opacityAnimation,
+                        child: Card(
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                children: <Widget>[
+                                  TextFormField(
+                                    controller: passwordController,
+                                    decoration: InputDecoration(
+                                      labelText: 'New Password',
+                                      labelStyle: const TextStyle(fontSize: 16, color: Colors.grey),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Colors.black),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Colors.black),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                                      ),
+                                      prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    ),
+                                    obscureText: true,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your new password';
+                                      }
+                                      if (value.length < 6) {
+                                        return 'Password must be at least 6 characters long';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide:
-                                    const BorderSide(color: Colors.black),
+                                  const SizedBox(height: 20),
+                                  TextFormField(
+                                    controller: confirmPasswordController,
+                                    decoration: InputDecoration(
+                                      labelText: 'Confirm New Password',
+                                      labelStyle: const TextStyle(fontSize: 16, color: Colors.grey),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Colors.black),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Colors.black),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                                      ),
+                                      prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
+                                      filled: true,
+                                      fillColor: Colors.grey[200],
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    ),
+                                    obscureText: true,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please confirm your new password';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: Colors.redAccent, width: 2),
+                                  const SizedBox(height: 20),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                                      backgroundColor: Colors.redAccent,
+                                      elevation: 4,
+                                      shadowColor: Colors.black45,
+                                    ),
+                                    onPressed: resetPasswordProvider.isLoading ? null : _submitForm,
+                                    child: resetPasswordProvider.isLoading
+                                        ? const CircularProgressIndicator(color: Colors.white)
+                                        : const Text(
+                                      'Reset Password',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                  prefixIcon: const Icon(Icons.lock,
-                                      color: Colors.redAccent),
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 14, horizontal: 16),
-                                ),
-                                obscureText: true,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your new password';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Password must be at least 6 characters long';
-                                  }
-                                  return null;
-                                },
+                                ],
                               ),
-                              const SizedBox(height: 20),
-                              TextFormField(
-                                controller: confirmPasswordController,
-                                decoration: InputDecoration(
-                                  labelText: 'Confirm New Password',
-                                  labelStyle: const TextStyle(
-                                      fontSize: 16, color: Colors.grey),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: Colors.black),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide:
-                                    const BorderSide(color: Colors.black),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: Colors.redAccent, width: 2),
-                                  ),
-                                  prefixIcon: const Icon(Icons.lock,
-                                      color: Colors.redAccent),
-                                  filled: true,
-                                  fillColor: Colors.grey[200],
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 14, horizontal: 16),
-                                ),
-                                obscureText: true,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please confirm your new password';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 20),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 14, horizontal: 24),
-                                  backgroundColor: Colors.redAccent,
-                                  elevation: 4,
-                                  shadowColor: Colors.black45,
-                                ),
-                                onPressed: _isLoading ? null : _submitForm,
-                                child: _isLoading
-                                    ? const CircularProgressIndicator(
-                                    color: Colors.white)
-                                    : const Text(
-                                  'Reset Password',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

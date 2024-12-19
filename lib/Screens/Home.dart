@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_dam/Screens/Recettes/recipe_list_screen.dart';
 import 'package:flutter_application_dam/Screens/User/UsersListPage.dart';
+import 'package:flutter_application_dam/news_page.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -79,11 +80,11 @@ class Home extends StatelessWidget {
               iconName: Icons.restaurant_menu,
               destinationPage: RecipeListScreen(),
             ),
-            const AdminTile(
+            AdminTile(
               sectionName: "Gestion Publication",
-              color: Color(0xFFF57C00),
+              color: const Color(0xFFF57C00),
               iconName: Icons.publish,
-              destinationPage: GestionUtilisateur(),
+              destinationPage: NewsPage(),
             ),
           ],
         ),

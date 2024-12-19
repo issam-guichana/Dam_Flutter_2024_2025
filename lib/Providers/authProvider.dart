@@ -11,6 +11,9 @@ class AuthProvider with ChangeNotifier {
   String? get token => _token;
   String? get errorMessage => _errorMessage;
 
+  String? _error;
+  String? get error => _error;
+
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -109,5 +112,39 @@ class AuthProvider with ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     debugPrint('Logged out successfully.');
+  }
+  Future<bool> forgotPassword(String email) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3001/auth/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+
+      _isLoading = false;
+
+      if (response.statusCode == 201) {
+        notifyListeners();
+        return true;
+      } else {
+        _error = json.decode(response.body)['message'] ?? 'Failed to process request';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = 'Connection error occurred';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
   }
 }

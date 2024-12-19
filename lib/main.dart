@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_dam/Providers/OTPProvider.dart';
+import 'package:flutter_application_dam/Providers/ResetPasswordProvider.dart';
 import 'package:flutter_application_dam/Providers/UsersProvider.dart';
 import 'package:flutter_application_dam/Providers/authProvider.dart';
 import 'package:flutter_application_dam/Screens/Auth/ForgetPassword.dart';
@@ -13,6 +15,8 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => OtpProvider()),
+        ChangeNotifierProvider(create: (_) => ResetPasswordProvider()),
       ],
       child: MyApp(),
     ),
