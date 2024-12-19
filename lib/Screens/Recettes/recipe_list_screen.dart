@@ -11,42 +11,110 @@ class RecipeListScreen extends StatefulWidget {
 class _RecipeListScreenState extends State<RecipeListScreen> {
   final ApiService apiService = ApiService();
   late Future<List<Recipe>> recipes;
+  List<Recipe> _filteredRecipes = [];
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     recipes = apiService.getRecipes();
-    _refreshRecipes;
+    _loadRecipes();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _loadRecipes() async {
+    final recipeList = await apiService.getRecipes();
+    setState(() {
+      _filteredRecipes = recipeList;
+    });
   }
 
   void _refreshRecipes() {
     setState(() {
       recipes = apiService.getRecipes();
+      _loadRecipes();
     });
+  }
+
+  void _filterRecipes(String query) {
+    recipes.then((recipeList) {
+      setState(() {
+        _filteredRecipes = recipeList
+            .where((recipe) =>
+            recipe.title.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      });
+    });
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    if (_isSearching) {
+      return AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () {
+            setState(() {
+              _isSearching = false;
+              _searchController.clear();
+              _loadRecipes();
+            });
+          },
+        ),
+        title: TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Rechercher une recette...',
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: Colors.grey[400]),
+          ),
+          style: TextStyle(color: Colors.black87, fontSize: 18),
+          onChanged: _filterRecipes,
+        ),
+      );
+    }
+
+    return AppBar(
+      elevation: 0,
+      backgroundColor: Colors.white,
+      title: Text(
+        'Mes Recettes',
+        style: TextStyle(
+          color: Colors.black87,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.search, color: Colors.black87),
+          onPressed: () {
+            setState(() {
+              _isSearching = true;
+            });
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.refresh, color: Colors.black87),
+          onPressed: _refreshRecipes,
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: Text(
-          'Mes Recettes',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.black87),
-            onPressed: _refreshRecipes,
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: FutureBuilder<List<Recipe>>(
         future: recipes,
         builder: (context, snapshot) {
@@ -70,7 +138,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                 ],
               ),
             );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          } else if (!snapshot.hasData || _filteredRecipes.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -78,7 +146,9 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                   Icon(Icons.restaurant_menu, size: 60, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    'Aucune recette disponible',
+                    _isSearching
+                        ? 'Aucune recette trouvée'
+                        : 'Aucune recette disponible',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -89,13 +159,12 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
             );
           }
 
-          final recipeList = snapshot.data!;
           return Padding(
             padding: const EdgeInsets.all(8.0),
             child: ListView.builder(
-              itemCount: recipeList.length,
+              itemCount: _filteredRecipes.length,
               itemBuilder: (context, index) {
-                final recipe = recipeList[index];
+                final recipe = _filteredRecipes[index];
                 return Card(
                   elevation: 2,
                   margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -164,7 +233,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddRecipeScreen()),
-          );
+          ).then((_) => _refreshRecipes());
         },
         label: Text('Ajouter une recette'),
         icon: Icon(Icons.add),

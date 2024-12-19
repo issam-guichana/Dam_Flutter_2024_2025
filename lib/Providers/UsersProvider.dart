@@ -111,4 +111,24 @@ class UserProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+  // Add these getter methods for statistics
+  int get totalUsers => _users.length;
+
+  Map<String, int> get roleDistribution {
+    Map<String, int> distribution = {};
+    for (var user in _users) {
+      distribution[user.roleId] = (distribution[user.roleId] ?? 0) + 1;
+    }
+    return distribution;
+  }
+
+  // Add this method to get email domain statistics
+  Map<String, int> get emailDomainStats {
+    Map<String, int> domains = {};
+    for (var user in _users) {
+      String domain = user.email.split('@').last;
+      domains[domain] = (domains[domain] ?? 0) + 1;
+    }
+    return domains;
+  }
 }

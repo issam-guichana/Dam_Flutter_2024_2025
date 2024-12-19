@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_dam/Models/UserModel.dart';
 import 'package:flutter_application_dam/Providers/UsersProvider.dart';
+import 'package:flutter_application_dam/Screens/User/statistics.dart';
 import 'package:provider/provider.dart';
 
 class GestionUtilisateur extends StatefulWidget {
@@ -367,6 +368,31 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
         ),
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.analytics, color: Colors.white),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => DraggableScrollableSheet(
+                  initialChildSize: 0.6,
+                  minChildSize: 0.3,
+                  maxChildSize: 0.9,
+                  builder: (_, controller) => Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: SingleChildScrollView(
+                      controller: controller,
+                      child: const StatisticsPanel(),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: IconButton(
