@@ -91,8 +91,10 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
   }
 
   void _showUserUpdateModal(BuildContext context, User user) {
-    final TextEditingController nameController = TextEditingController(text: user.name);
-    final TextEditingController emailController = TextEditingController(text: user.email);
+    final TextEditingController nameController =
+        TextEditingController(text: user.name);
+    final TextEditingController emailController =
+        TextEditingController(text: user.email);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -137,7 +139,8 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
                     if (value == null || value.isEmpty) {
                       return 'Veuillez entrer un email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
                       return 'Veuillez entrer un email valide';
                     }
                     return null;
@@ -209,7 +212,6 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
               _buildProfileRow(Icons.person, 'Nom', user.name),
               const SizedBox(height: 10),
               _buildProfileRow(Icons.email, 'Email', user.email),
-
             ],
           ),
           actions: [
@@ -341,6 +343,7 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
           'Gestion Utilisateur',
@@ -350,9 +353,19 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.deepPurple.shade800,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.deepPurple.shade800,
+                Colors.deepPurple.shade500,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         elevation: 0,
-
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -365,85 +378,143 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
           ),
         ],
       ),
-      body: Consumer<UserProvider>(
-        builder: (context, userProvider, child) {
-          if (userProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (userProvider.error != null) {
-            return Center(
-              child: Text(
-                'Erreur: ${userProvider.error}',
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-
-          // Replace the existing ListView.builder in the build method
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: userProvider.users.length,
-            itemBuilder: (context, index) {
-              final user = userProvider.users[index];
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutQuint,
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      spreadRadius: 1,
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.deepPurple.shade400,
-                      Colors.deepPurple.shade700,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  title: Text(
-                    user.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      user.email,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                  trailing: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.more_vert, color: Colors.white),
-                      onPressed: () => _showUserActions(context, user),
-                    ),
-                  ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.grey[100]!,
+              Colors.grey[50]!,
+            ],
+          ),
+        ),
+        child: Consumer<UserProvider>(
+          builder: (context, userProvider, child) {
+            if (userProvider.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
                 ),
               );
-            },
+            }
+
+            if (userProvider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Erreur: ${userProvider.error}',
+                      style: TextStyle(color: Colors.red[300], fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: () => userProvider.fetchUsers(),
+              color: Colors.deepPurple,
+              child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(12),
+                itemCount: userProvider.users.length,
+                itemBuilder: (context, index) {
+                  final user = userProvider.users[index];
+                  return TweenAnimationBuilder(
+                    duration: Duration(milliseconds: 300 + (index * 100)),
+                    tween: Tween<double>(begin: 0, end: 1),
+                    builder: (context, double value, child) {
+                      return Transform.translate(
+                        offset: Offset(0, 50 * (1 - value)),
+                        child: Opacity(
+                          opacity: value,
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                            elevation: 8,
+                            shadowColor: Colors.black26,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.deepPurple.shade400,
+                                    Colors.deepPurple.shade700,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(16),
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.white,
+                                  child: Text(
+                                    user.name[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: Colors.deepPurple.shade700,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(
+                                  user.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    user.email,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.more_vert,
+                                      color: Colors.white),
+                                  onPressed: () =>
+                                      _showUserActions(context, user),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: TweenAnimationBuilder(
+        duration: const Duration(milliseconds: 500),
+        tween: Tween<double>(begin: 0, end: 1),
+        builder: (context, double value, child) {
+          return Transform.scale(
+            scale: value,
+            child: FloatingActionButton(
+              onPressed: () {
+                // Add user functionality
+              },
+              child: const Icon(Icons.person_add),
+              backgroundColor: Colors.deepPurple,
+            ),
           );
         },
       ),
