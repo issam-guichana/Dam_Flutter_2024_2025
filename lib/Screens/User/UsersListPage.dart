@@ -23,21 +23,37 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
   void _showUserActions(BuildContext context, User user) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(25),
+            ),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Actions pour ${user.name}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+              Container(
+                width: 50,
+                height: 5,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(5),
                 ),
               ),
-              const SizedBox(height: 20),
+              Text(
+                'Actions pour ${user.name}',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple.shade800,
+                ),
+              ),
+              const SizedBox(height: 30),
               _buildActionButton(
                 icon: Icons.visibility,
                 text: 'Voir Profil',
@@ -268,25 +284,34 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
     required Color color,
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(width: 10),
-          Text(
-            text,
-            style: const TextStyle(color: Colors.white),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
-        ],
+          elevation: 3,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24),
+            const SizedBox(width: 12),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -319,15 +344,24 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
       appBar: AppBar(
         title: const Text(
           'Gestion Utilisateur',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.deepPurple.shade800,
+        elevation: 0,
+
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement add new user functionality
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              icon: const Icon(Icons.add, color: Colors.white, size: 28),
+              onPressed: () {
+                // Existing add user functionality
+              },
+            ),
           ),
         ],
       ),
@@ -346,46 +380,66 @@ class _GestionUtilisateurState extends State<GestionUtilisateur> {
             );
           }
 
+          // Replace the existing ListView.builder in the build method
           return ListView.builder(
             padding: const EdgeInsets.all(8),
             itemCount: userProvider.users.length,
             itemBuilder: (context, index) {
               final user = userProvider.users[index];
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutQuint,
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 0,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withOpacity(0.15),
+                      spreadRadius: 1,
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                   gradient: LinearGradient(
-                    colors: [Colors.blue.withOpacity(0.7), Colors.blue],
+                    colors: [
+                      Colors.deepPurple.shade400,
+                      Colors.deepPurple.shade700,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   title: Text(
                     user.name,
                     style: const TextStyle(
                       color: Colors.white,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  subtitle: Text(
-                    user.email,
-                    style: const TextStyle(color: Colors.white70),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      user.email,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    onPressed: () => _showUserActions(context, user),
+                  trailing: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      onPressed: () => _showUserActions(context, user),
+                    ),
                   ),
                 ),
               );
